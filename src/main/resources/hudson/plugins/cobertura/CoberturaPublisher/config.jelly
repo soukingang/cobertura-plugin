@@ -4,6 +4,10 @@
              description="${%xml.report.pattern.description}">
         <f:textbox name="cobertura.coberturaReportFile" value="${instance.coberturaReportFile}"/>
     </f:entry>
+    <f:entry title="${%Consider all builds}"
+             description="${%all.builds.description}" >
+       <f:checkbox name="cobertura.allBuilds" checked="${instance.allBuilds}" />                                                                                        
+    </f:entry>   
     <f:entry title="${%Consider only stable builds}"
              description="${%only.stable.builds.description}" >
        <f:checkbox name="cobertura.onlyStable" checked="${instance.onlyStable}" />                                                                                        

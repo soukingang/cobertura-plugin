@@ -14,10 +14,12 @@ import java.io.IOException;
 public class CoberturaProjectAction extends Actionable implements ProminentProjectAction {
 
     private final AbstractProject<?, ?> project;
+    private boolean allBuilds;
     private boolean onlyStable;
 
-    public CoberturaProjectAction(AbstractProject<?, ?> project, boolean onlyStable) {
+    public CoberturaProjectAction(AbstractProject<?, ?> project, boolean allBuilds, boolean onlyStable) {
         this.project = project;
+        this.allBuilds = allBuilds;
         this.onlyStable = onlyStable;
     }
 
@@ -26,6 +28,7 @@ public class CoberturaProjectAction extends Actionable implements ProminentProje
         
         CoberturaPublisher cp = (CoberturaPublisher) project.getPublishersList().get(CoberturaPublisher.DESCRIPTOR);
         if (cp != null) {
+            allBuilds = cp.getAllBuilds();
             onlyStable = cp.getOnlyStable();
         }
     }
@@ -63,7 +66,8 @@ public class CoberturaProjectAction extends Actionable implements ProminentProje
     public CoberturaBuildAction getLastResult() {
         for (AbstractBuild<?, ?> b = getLastBuildToBeConsidered(); b != null; b = b.getPreviousNotFailedBuild()) {
             if (b.getResult() == Result.FAILURE || (b.getResult() != Result.SUCCESS && onlyStable))
-                continue;
+                if(!allBuilds)
+                    continue;
             CoberturaBuildAction r = b.getAction(CoberturaBuildAction.class);
             if (r != null)
                 return r;
@@ -81,7 +85,8 @@ public class CoberturaProjectAction extends Actionable implements ProminentProje
     public Integer getLastResultBuild() {
         for (AbstractBuild<?, ?> b = getLastBuildToBeConsidered(); b != null; b = b.getPreviousNotFailedBuild()) {
             if (b.getResult() == Result.FAILURE || (b.getResult() != Result.SUCCESS && onlyStable))
-                continue;
+                if(!allBuilds)
+                    continue;
             CoberturaBuildAction r = b.getAction(CoberturaBuildAction.class);
             if (r != null)
                 return b.getNumber();

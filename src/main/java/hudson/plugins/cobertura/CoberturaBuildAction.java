@@ -46,6 +46,7 @@ public class CoberturaBuildAction implements HealthReportingAction, StaplerProxy
     private Map<CoverageMetric, Ratio> result;
     private HealthReport health = null;
     private transient WeakReference<CoverageResult> report;
+    private boolean allBuilds;
     private boolean onlyStable;
 
     /**
@@ -165,7 +166,7 @@ public class CoberturaBuildAction implements HealthReportingAction, StaplerProxy
             }
             assert b.getResult() != Result.FAILURE : "We asked for the previous not failed build";
             CoberturaBuildAction r = b.getAction(CoberturaBuildAction.class);
-            if (r != null && r.includeOnlyStable() && b.getResult() != Result.SUCCESS) {
+            if (r != null && r.includeAllBuilds() && r.includeOnlyStable() && b.getResult() != Result.SUCCESS) {
                 r = null;
             }
             if (r != null) {
@@ -174,16 +175,21 @@ public class CoberturaBuildAction implements HealthReportingAction, StaplerProxy
         }
     }
 
+    private boolean includeAllBuilds() {
+        return allBuilds;
+    }
+
     private boolean includeOnlyStable() {
         return onlyStable;
     }
 
     CoberturaBuildAction(AbstractBuild<?, ?> owner, CoverageResult r, CoverageTarget healthyTarget,
-            CoverageTarget unhealthyTarget, boolean onlyStable, boolean failUnhealthy, boolean failUnstable, boolean autoUpdateHealth, boolean autoUpdateStability) {
+            CoverageTarget unhealthyTarget, boolean allBuilds, boolean onlyStable, boolean failUnhealthy, boolean failUnstable, boolean autoUpdateHealth, boolean autoUpdateStability) {
         this.owner = owner;
         this.report = new WeakReference<CoverageResult>(r);
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
+        this.allBuilds = allBuilds;
         this.onlyStable = onlyStable;
         this.failUnhealthy = failUnhealthy;
         this.failUnstable = failUnstable;
@@ -228,8 +234,8 @@ public class CoberturaBuildAction implements HealthReportingAction, StaplerProxy
     private static final Logger logger = Logger.getLogger(CoberturaBuildAction.class.getName());
 
     public static CoberturaBuildAction load(AbstractBuild<?, ?> build, CoverageResult result, CoverageTarget healthyTarget,
-            CoverageTarget unhealthyTarget, boolean onlyStable, boolean failUnhealthy, boolean failUnstable, boolean autoUpdateHealth, boolean autoUpdateStability) {
-        return new CoberturaBuildAction(build, result, healthyTarget, unhealthyTarget, onlyStable, failUnhealthy, failUnstable, autoUpdateHealth, autoUpdateStability);
+            CoverageTarget unhealthyTarget, boolean allBuilds, boolean onlyStable, boolean failUnhealthy, boolean failUnstable, boolean autoUpdateHealth, boolean autoUpdateStability) {
+        return new CoberturaBuildAction(build, result, healthyTarget, unhealthyTarget, allBuilds, onlyStable, failUnhealthy, failUnstable, autoUpdateHealth, autoUpdateStability);
     }
 
     /**

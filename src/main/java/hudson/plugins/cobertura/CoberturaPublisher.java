@@ -56,6 +56,8 @@ public class CoberturaPublisher extends Recorder {
 
     private final String coberturaReportFile;
 
+    private final boolean allBuilds;
+
     private final boolean onlyStable;
 
     private final boolean failUnhealthy;
@@ -87,10 +89,11 @@ public class CoberturaPublisher extends Recorder {
      * @stapler-constructor
      */
     @DataBoundConstructor
-    public CoberturaPublisher(String coberturaReportFile, boolean onlyStable, boolean failUnhealthy, boolean failUnstable, 
+    public CoberturaPublisher(String coberturaReportFile, boolean allBuilds, boolean onlyStable, boolean failUnhealthy, boolean failUnstable, 
             boolean autoUpdateHealth, boolean autoUpdateStability, boolean zoomCoverageChart, boolean failNoReports, SourceEncoding sourceEncoding,
             int maxNumberOfBuilds) {
         this.coberturaReportFile = coberturaReportFile;
+        this.allBuilds = allBuilds;
         this.onlyStable = onlyStable;
         this.failUnhealthy = failUnhealthy;
         this.failUnstable = failUnstable;
@@ -192,6 +195,10 @@ public class CoberturaPublisher extends Recorder {
      */
     public String getCoberturaReportFile() {
         return coberturaReportFile;
+    }
+
+    public boolean getAllBuilds() {
+        return allBuilds;
     }
 
     /**
@@ -326,10 +333,12 @@ public class CoberturaPublisher extends Recorder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) 
             throws InterruptedException, IOException {
-        Result threshold = onlyStable ? Result.SUCCESS : Result.UNSTABLE;
-        if (build.getResult().isWorseThan(threshold)) {
-            listener.getLogger().println("Skipping Cobertura coverage report as build was not " + threshold.toString() + " or better ...");
-            return true;
+        if (!allBuilds) {
+            Result threshold = onlyStable ? Result.SUCCESS : Result.UNSTABLE;
+            if (build.getResult().isWorseThan(threshold)) {
+                listener.getLogger().println("Skipping Cobertura coverage report as build was not " + threshold.toString() + " or better ...");
+                return true;
+            }
         }
 
         listener.getLogger().println("[Cobertura] Publishing Cobertura coverage report...");
@@ -405,7 +414,7 @@ public class CoberturaPublisher extends Recorder {
             moduleRoot.act(painter);
 
             final CoberturaBuildAction action = CoberturaBuildAction.load(build, result, healthyTarget,
-                    unhealthyTarget, getOnlyStable(), getFailUnhealthy(), getFailUnstable(), getAutoUpdateHealth(), getAutoUpdateStability());
+                    unhealthyTarget, getAllBuilds(), getOnlyStable(), getFailUnhealthy(), getFailUnstable(), getAutoUpdateHealth(), getAutoUpdateStability());
 
             build.getActions().add(action);
             Set<CoverageMetric> failingMetrics = failingTarget.getFailingMetrics(result);
@@ -495,7 +504,7 @@ public class CoberturaPublisher extends Recorder {
      */
     @Override
     public Action getProjectAction(AbstractProject<?, ?> project) {
-        return new CoberturaProjectAction(project, getOnlyStable());
+        return new CoberturaProjectAction(project, getAllBuilds(), getOnlyStable());
     }
 
     /**
